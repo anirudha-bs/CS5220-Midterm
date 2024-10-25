@@ -2,9 +2,9 @@
 import multer from 'multer';
 import { uploadFile } from '../services/uploadService.js';
 
-// Multer configuration for handling file uploads
+// Configure multer for handling file uploads
 const storage = multer.memoryStorage();
-const upload = multer({ storage }).single('file');  // Single file upload
+const upload = multer({ storage }).single('file');
 
 export const uploadFileController = (req, res) => {
   upload(req, res, async (err) => {
@@ -17,8 +17,14 @@ export const uploadFileController = (req, res) => {
     }
 
     try {
-      const fileUrl = await uploadFile(req.file);
-      res.status(200).json({ message: 'File uploaded successfully', url: fileUrl });
+      // Add additional metadata here if needed
+      const metadata = {
+        userId: req.body.userId,
+        description: req.body.description,
+      };
+
+      const fileData = await uploadFile(req.file, metadata);
+      res.status(200).json({ message: 'File uploaded successfully', data: fileData });
     } catch (error) {
       res.status(500).json({ error: error.message });
     }

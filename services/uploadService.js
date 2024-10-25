@@ -1,7 +1,8 @@
-import { bucket } from '../config/firebaseConfig.js';
-import { v4 as uuidv4 } from 'uuid';  // To generate unique names for files
+// services/uploadService.js
+import { bucket, db } from '../config/firebaseConfig.js';
+import { v4 as uuidv4 } from 'uuid';
 
-export const uploadFile = async (file) => {
+export const uploadFile = async (file, metadata) => {
   try {
     const uniqueFileName = `${uuidv4()}_${file.originalname}`;
     const fileUpload = bucket.file(uniqueFileName);
@@ -10,16 +11,30 @@ export const uploadFile = async (file) => {
       metadata: {
         contentType: file.mimetype,
         metadata: {
-          firebaseStorageDownloadTokens: uuidv4()  // Optional: Generate a token for download
-        }
-      }
+          firebaseStorageDownloadTokens: uuidv4(),
+        },
+      },
     });
 
     return new Promise((resolve, reject) => {
       blobStream.on('error', (error) => reject(error));
-      blobStream.on('finish', () => {
-        const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileUpload.name}`;
-        resolve(publicUrl);  // Return the public URL after uploading
+      blobStream.on('finish', async () => {
+        const fileUrl = `https://storage.googleapis.com/${bucket.name}/${uniqueFileName}`;
+
+        // Filter out any undefined values from metadata
+        const filteredMetadata = Object.fromEntries(
+          Object.entries(metadata).filter(([_, value]) => value !== undefined)
+        );
+
+        // Save file metadata to Firestore after successful upload
+        const docRef = await db.collection('files').add({
+          fileName: uniqueFileName,
+          url: fileUrl,
+          uploadedAt: new Date(),
+          ...filteredMetadata,  // Add filtered metadata here
+        });
+
+        resolve({ id: docRef.id, url: fileUrl });
       });
       blobStream.end(file.buffer);
     });

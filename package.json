@@ -2,13 +2,13 @@
   "name": "cs5220",
   "version": "1.0.0",
   "description": "Midterm Project",
-  "main": "server.js",
+  "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "node server.js",
+    "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "Your Name",
+  "author": "Anirudha BS",
   "license": "ISC",
   "dependencies": {
     "body-parser": "^1.19.0",
